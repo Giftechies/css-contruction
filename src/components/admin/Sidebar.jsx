@@ -17,7 +17,7 @@ function Menuitem(  ){
         <aside className="flex flex-col gap-6 mt-12 " >
             {path.map((el,id)=>{
                 return(
-                    <a href={el.path}>
+                    <a  key={id} href={el.path}>
                         <div className="cursor-pointer" >{el.label}</div>
                     </a>
                 )
