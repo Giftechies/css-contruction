@@ -1,11 +1,13 @@
-import Form from '@/components/form/mult/MultiStepForm';
-import Animations from "@/components/animations/Animations";
+import dynamic from "next/dynamic";
+
+const Form = dynamic(() => import('@/components/form/mult/MultiStepForm'), { ssr: false });
+const Animations = dynamic(() => import('@/components/animations/Animations'), { ssr: false });
 
 export default function PickDetailsPage() {
-    return(
+    return (
         <div>
-         <Form />
-         <Animations/>
+            <Form />
+            <Animations />
         </div>
     )
 }
