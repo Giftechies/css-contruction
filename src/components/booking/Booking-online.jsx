@@ -38,7 +38,7 @@ const navigate = useRouter()
 
 
 const methods = useForm({ defaultValues });
-  const [currentStep, setCurrentStep] = useState(4);
+  const [currentStep, setCurrentStep] = useState(0);
 
   const steps = [
     { title: "Postcode", component: <PostCode /> },

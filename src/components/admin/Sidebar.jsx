@@ -8,8 +8,8 @@ export default function Sidebar(){
 
 const path = [
     {label:"Postcode",path:"/admin/postcode"},
-    {label:"Skip size",path:"/admin/postcode"},
-    {label:"Details",path:"/admin/postcode"},
+    {label:"Skip size",path:"#"},
+    {label:"Details",path:"#"},
 ]
 
 function Menuitem(  ){
