@@ -70,10 +70,10 @@ export default function PostcodePage() {
 };
 
   return (
-    <section className="p-6">
+    <section className="p-6 border border-red-200 ">
       <h1 className="mb-4 text-2xl font-bold">Postcode Management</h1>
     
-   <form onSubmit={handleCreate} className="mb-6 flex gap-2 items-center">
+   <form onSubmit={handleCreate} className="mb-6 flex flex-1 justify-end gap-2 items-center">
   {/* Single Add */}
   <input
     type="text"
@@ -99,7 +99,7 @@ export default function PostcodePage() {
   />
   <label
     htmlFor="bulkFile"
-    className="cursor-pointer rounded bg-black-4 text-white-1 px-4 py-2 text-white hover:bg-black-4"
+    className="cursor-pointer rounded bg-black-2 shrink-0 text-white-1 px-4 py-2 text-white hover:bg-black-4"
   >
     Import Bulk
   </label>
@@ -108,31 +108,33 @@ export default function PostcodePage() {
 
 
       {/* Postcode table */}
-      <table className="w-full border">
-        <thead>
-          <tr className="bg-gray-100">
-            <th className="border p-2">#</th>
-            <th className="border p-2">Postcode</th>
-            <th className="border p-2">Actions</th>
+      <table className=" w-[90%] ">
+       
+      {/* <div data-lenis-prevent className="overflow-y-scroll h-[15rem] w-full " > */}
+         <thead className="" >
+          <tr className="bg-gray-100  text-left ">
+            <th className=" w-[20%] p-2">Sr.No</th>
+            <th className=" w-[80%] p-2">Postcode</th>
+            <th className="text-center p-2">Actions</th>
           </tr>
         </thead>
-        <tbody>
+          <tbody className=" w-full  " >
           {postcodes.map((pc, idx) => (
-            <tr key={pc._id} className="border">
-              <td className="border p-2">{idx + 1}</td>
-              <td className="border p-2">
+            <tr key={pc._id} className="pt-2 ">
+              <td className=" p-2">{idx + 1}</td>
+              <td className=" p-2">
                 {editId === pc._id ? (
                   <input
                     type="text"
                     value={editCode}
                     onChange={(e) => setEditCode(e.target.value)}
-                    className="rounded border p-1"
+                    className={`rounded   p-1 ${editId? "border-2 w-full border-black-1 ":""} `}
                   />
                 ) : (
                   pc.postcode
                 )}
               </td>
-              <td className="space-x-2 border p-2">
+              <td className="space-x-2 flex justify-center  p-2">
                 {editId === pc._id ? (
                   <>
                     <button
@@ -160,13 +162,13 @@ export default function PostcodePage() {
                       }}
                       className="text-blue-500 hover:text-blue-400 px-2 py-1"
                     >
-                       <Pencil />
+                       <Pencil size={20} />
                     </button>
                     <button
                       onClick={() => handleDelete(pc._id)}
-                      className="text-white rounded bg-red-600 text-white-1 px-2 py-1"
+                      className="text-white   text-red-600 x-2 py-1"
                     >
-                     <Trash />
+                     <Trash size={20} />
                     </button>
                   </>
                 )}
@@ -182,6 +184,7 @@ export default function PostcodePage() {
             </tr>
           )}
         </tbody>
+      {/* </div> */}
       </table>
     </section>
   );

@@ -1,5 +1,5 @@
 import { ConnectDb } from "../../../helper/db";
-import Postcode from "../../../../models/postcode";
+import Postcode from "../../../helper/models/postcode";
 
 // CREATE (single postcode)
 export async function POST(req) {

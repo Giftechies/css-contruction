@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import * as XLSX from "xlsx";
-import Postcode from "../../../../../models/postcode";
+import Postcode from "../../../../helper/models/postcode";
 import { ConnectDb } from "../../../../helper/db";
 
 export async function POST(req) {

@@ -1,11 +1,13 @@
 import { ConnectDb } from "../../../../helper/db";
-import Postcode from "../../../../../models/postcode";
+import Postcode from "../../../../helper/models/postcode";
 
 // UPDATE
 export async function PUT(req, { params }) {
   try {
     await ConnectDb();
     const body = await req.json();
+    console.log("update>>>>>",body);
+    
     const updated = await Postcode.findByIdAndUpdate(params.id, body, { new: true });
     return new Response(JSON.stringify(updated), { status: 200 });
   } catch (error) {

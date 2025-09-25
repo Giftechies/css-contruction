@@ -6,7 +6,7 @@ const postSchema = new Schema({
     required: true,
     unique: true,
   },
-}, { timestamps: true });
+});
 
 const Postcode = mongoose.models.Postcode || mongoose.model("Postcode", postSchema);
 
