@@ -103,7 +103,7 @@ export default function SizePage() {
       {/* Add Size Form */}
       <form
         onSubmit={handleCreate}
-        className="mb-6 flex flex-wrap gap-2 items-center"
+        className="mb-6 flex flex-wrap gap-2 items-center justify-end "
       >
         <input
           type="text"
