@@ -44,7 +44,7 @@ export async function GET() {
 
     const sizes = await Size.find({})
       .populate("category", "category")
-      .sort({ "category": 1, size: 1 }); // sort first by category then size
+      .sort({ "category": 1, "size": 1 }); // sort first by category then size
 
     return NextResponse.json(
       { success: true, data: sizes },

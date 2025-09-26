@@ -1,26 +1,15 @@
- import mongoose from "mongoose";
+import mongoose, { model, Schema } from "mongoose";
 
+const rateSchema = new Schema(
+  {
+    postId: { type: Schema.Types.ObjectId, ref: "Postcode", required: true },
+    categoryId: { type: Schema.Types.ObjectId, ref: "Category", required: true },
+    sizeId: { type: Schema.Types.ObjectId, ref: "Size", required: true },
+    rate: { type: Number, required: true },
+  },
+ 
+);
 
- const rateSchema = new Schema({
-    rate:{
-        type:String,
-        required:true,
-        unique:true
-    },
-    postId:{
-     type:String,
-     required:true,
-    },
-    categoryId:{
-     type:String,
-     required:true,
-    },
-    sizeId:{
-     type:String,
-     required:true,
-    },
- })
+const Rates = mongoose.models.Rate || mongoose.model("Rate", rateSchema);
 
- const Rates = mongoose.models.Rate || mongoose.model("Rates",rateSchema);
-
- export default Rates;
+export default Rates;

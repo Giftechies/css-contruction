@@ -3,36 +3,47 @@
 import { cn } from "@/lib/utils"
 import { ChartArea, ChevronDown, ChevronRight } from "lucide-react"
 import { useRouter, usePathname } from "next/navigation"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 
 export default function Sidebar({ className }) {
   const pathname = usePathname()
-  console.log(pathname);
-  
   const navigate = useRouter()
   const [openMenu, setOpenMenu] = useState(null)
 
   const path = [
-    { label: "Postcode", path: "/admin/postcode" },
     {
-      label: "Skip",
+      label: "Online Booking Form",
       path: "#",
       children: [
-        { label: "Category", path: "/admin/skip/category" },
-        { label: "Size", path: "/admin/skip/size" },
-        { label: "Roro", path: "/admin/skip-details/roro" },
+        { label: "Postcode", path: "/admin/online-booking-form/postcode" },
+        { label: "Category", path: "/admin/online-booking-form/category" },
+        { label: "Size", path: "/admin/online-booking-form/size" },
+        { label: "Rates", path: "/admin/online-booking-form/rates" },
       ],
     },
     { label: "Details", path: "#" },
   ]
 
+  // keep parent open if any child is active
+  useEffect(() => {
+    path.forEach((el, id) => {
+      if (el.children?.some((child) => pathname === child.path)) {
+        setOpenMenu(id) // auto-open parent
+      }
+    })
+  }, [pathname])
+
   function Menuitem() {
     return (
       <aside className="flex flex-col gap-2 mt-6 w-full">
         {path.map((el, id) => {
-          const isActive = pathname === el.path
-          
           const hasChildren = el.children && el.children.length > 0
+
+          const isChildActive = hasChildren
+            ? el.children.some((child) => pathname === child.path)
+            : false
+
+          const isActive = pathname === el.path || isChildActive
           const isOpen = openMenu === id
 
           return (
