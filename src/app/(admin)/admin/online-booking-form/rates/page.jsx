@@ -4,9 +4,10 @@ import { useEffect, useState } from "react";
 import {
   Pencil,
   Trash,
-  SearchIcon,
   ChevronLeft,
   ChevronRight,
+  ChevronsUpDown,
+  Check,
 } from "lucide-react";
 import toast, { Toaster } from "react-hot-toast";
 import { Button } from "@/components/ui/button";
@@ -18,7 +19,16 @@ import {
   DialogTrigger,
   DialogOverlay,
 } from "@/components/ui/dialog";
-import {Skeleton} from "@/components/ui/skeleton"; // Shadcn Skeleton component
+import { Skeleton } from "@/components/ui/skeleton";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+} from "@/components/ui/command";
+import { cn } from "@/lib/utils";
 
 export default function RatePage() {
   const [rates, setRates] = useState([]);
@@ -40,34 +50,29 @@ export default function RatePage() {
   const [loading, setLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
 
-  // Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
-  // Fetch all rates
-const fetchRates = async () => {
-  setLoading(true);
-  try {
-    const res = await fetch("/api/form/rates"); // fetch API
-    console.log(res.ok, "fecthrate"); // true/false
-    const data = await res.json(); // parse JSON from response
-    console.log(data, "fecthrate>>>"); // the actual JSON
+  const [postcodeQuery, setPostcodeQuery] = useState("");
+  const [editPostcodeQuery, setEditPostcodeQuery] = useState("");
 
-    if (data.success) {
-      setRates(data.data); // store rates in state
-    } else {
-      toast.error(data.message || "Failed to fetch rates");
+  // Fetch rates
+  const fetchRates = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/form/rates");
+      const data = await res.json();
+      if (data.success) setRates(data.data);
+      else toast.error(data.message || "Failed to fetch rates");
+    } catch (err) {
+      console.error(err);
+      toast.error("Error fetching rates");
+    } finally {
+      setLoading(false);
     }
-  } catch (error) {
-    console.error("Fetch rates error:", error);
-    toast.error("Something went wrong while fetching rates");
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
-
-  // Fetch all postcodes, categories, sizes
+  // Fetch meta (postcodes, categories, sizes)
   const fetchMeta = async () => {
     const [postRes, catRes, sizeRes] = await Promise.all([
       fetch("/api/form/postcode"),
@@ -90,13 +95,8 @@ const fetchRates = async () => {
   }, []);
 
   // Filter sizes by selected category
-  const filteredSizes = sizes.filter(
-    (s) => s.category?._id === selectedCategory
-  );
-
-  const filteredSizesEdit = sizes.filter(
-    (s) => s.category?._id === editCategory
-  );
+  const filteredSizes = sizes.filter((s) => s.category?._id === selectedCategory);
+  const filteredSizesEdit = sizes.filter((s) => s.category?._id === editCategory);
 
   // Pagination
   const totalPages = Math.ceil(rates.length / itemsPerPage);
@@ -115,8 +115,8 @@ const fetchRates = async () => {
     e.preventDefault();
     if (!selectedPostcode || !selectedCategory || !selectedSize || !newRate)
       return toast.error("All fields are required");
-    setLoading(true);
 
+    setLoading(true);
     const res = await fetch("/api/form/rates", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -134,11 +134,10 @@ const fetchRates = async () => {
       setSelectedPostcode("");
       setSelectedCategory("");
       setSelectedSize("");
+      setPostcodeQuery("");
       setIsOpen(false);
       fetchRates();
-    } else {
-      toast.error(data.message || "Failed to add rate");
-    }
+    } else toast.error(data.message || "Failed to add rate");
     setLoading(false);
   };
 
@@ -146,8 +145,8 @@ const fetchRates = async () => {
   const handleUpdate = async (id) => {
     if (!editPostcode || !editCategory || !editSize || !editRate)
       return toast.error("All fields are required");
-    setLoading(true);
 
+    setLoading(true);
     const res = await fetch("/api/form/rates", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
@@ -167,10 +166,9 @@ const fetchRates = async () => {
       setEditCategory("");
       setEditSize("");
       setEditRate("");
+      setEditPostcodeQuery("");
       fetchRates();
-    } else {
-      toast.error(data.message || "Failed to update rate");
-    }
+    } else toast.error(data.message || "Failed to update rate");
     setLoading(false);
   };
 
@@ -179,45 +177,78 @@ const fetchRates = async () => {
     if (!confirm("Delete this rate?")) return;
     const res = await fetch(`/api/form/rates?id=${id}`, { method: "DELETE" });
     const data = await res.json();
-    if (data.success) {
-      toast.success("Rate deleted successfully");
-      fetchRates();
-    } else {
-      toast.error(data.message || "Failed to delete rate");
-    }
+    if (data.success) fetchRates();
+    else toast.error(data.message || "Failed to delete rate");
   };
+
+  // Filtered postcode list for search (case-insensitive)
+  const filteredPostcodes = postcodes.filter((p) =>
+    p.postcode.toLowerCase().includes(postcodeQuery.toLowerCase())
+  );
+  const filteredEditPostcodes = postcodes.filter((p) =>
+    p.postcode.toLowerCase().includes(editPostcodeQuery.toLowerCase())
+  );
 
   return (
     <section className="p-6 border border-gray-200">
       <Toaster position="top-right" />
       <h1 className="mb-4 text-2xl font-bold">Rate Management</h1>
 
-      {/* Add Rate */}
+      {/* Add Rate Dialog */}
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogTrigger asChild>
-          <Button className="mb-4 text-white-1">Add New Rate</Button>
+          <Button  className=" text-white-1 mb-4">Add New Rate</Button>
         </DialogTrigger>
-        <DialogOverlay className="fixed inset-0 bg-black-4/50" />
+        <DialogOverlay className="fixed inset-0 bg-black/50" />
         <DialogContent className="w-[90%] md:w-[500px] p-4 rounded-lg">
           <DialogHeader>
             <DialogTitle className="text-center">Create New Rate</DialogTitle>
           </DialogHeader>
 
           <form className="flex flex-col gap-3 mt-2" onSubmit={handleCreate}>
-            <select
-              required
-              value={selectedPostcode}
-              onChange={(e) => setSelectedPostcode(e.target.value)}
-              className="p-2 border rounded"
-            >
-              <option value="">Select Postcode</option>
-              {postcodes.map((p) => (
-                <option key={p._id} value={p._id}>
-                  {p.postcode}
-                </option>
-              ))}
-            </select>
+            {/* Searchable Postcode */}
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" role="combobox" className="w-full justify-between">
+                  {selectedPostcode
+                    ? postcodes.find((p) => p._id === selectedPostcode)?.postcode
+                    : "Select Postcode"}
+                  <ChevronsUpDown className="ml-2 h-4 w-4 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[300px] p-0">
+                <Command>
+                  <CommandInput
+                    placeholder="Search postcode..."
+                    value={postcodeQuery}
+                    onValueChange={setPostcodeQuery}
+                  />
+                  <CommandEmpty>No postcodes found.</CommandEmpty>
+                  <CommandGroup>
+                    {filteredPostcodes.map((p) => (
+                      <CommandItem
+                        key={p._id}
+                        value={p._id}
+                        onSelect={() => {
+                          setSelectedPostcode(p._id);
+                          setPostcodeQuery("");
+                        }}
+                      >
+                        <Check
+                          className={cn(
+                            "mr-2 h-4 w-4",
+                            selectedPostcode === p._id ? "opacity-100" : "opacity-0"
+                          )}
+                        />
+                        {p.postcode}
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                </Command>
+              </PopoverContent>
+            </Popover>
 
+            {/* Category */}
             <select
               required
               value={selectedCategory}
@@ -235,6 +266,7 @@ const fetchRates = async () => {
               ))}
             </select>
 
+            {/* Size */}
             <select
               required
               value={selectedSize}
@@ -260,7 +292,7 @@ const fetchRates = async () => {
             <button
               type="submit"
               disabled={loading}
-              className="bg-primary text-white p-2 rounded disabled:opacity-50"
+              className="bg-primary text-white-1 p-2 rounded disabled:opacity-50"
             >
               {loading ? "Adding..." : "Add Rate"}
             </button>
@@ -292,26 +324,61 @@ const fetchRates = async () => {
                 ))
               : paginatedRates.map((r, idx) => (
                   <tr key={r._id}>
-                    <td className="border p-2">
-                      {(currentPage - 1) * itemsPerPage + idx + 1}
-                    </td>
+                    <td className="border p-2">{(currentPage - 1) * itemsPerPage + idx + 1}</td>
+
+                    {/* Edit Postcode */}
                     <td className="border p-2">
                       {editId === r._id ? (
-                        <select
-                          value={editPostcode}
-                          onChange={(e) => setEditPostcode(e.target.value)}
-                          className="p-1 border rounded w-full"
-                        >
-                          {postcodes.map((p) => (
-                            <option key={p._id} value={p._id}>
-                              {p.postcode}
-                            </option>
-                          ))}
-                        </select>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant="outline"
+                              role="combobox"
+                              className="w-full justify-between"
+                            >
+                              {editPostcode
+                                ? postcodes.find((p) => p._id === editPostcode)?.postcode
+                                : "Select Postcode"}
+                              <ChevronsUpDown className="ml-2 h-4 w-4 opacity-50" />
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-[300px] p-0">
+                            <Command>
+                              <CommandInput
+                                placeholder="Search postcode..."
+                                value={editPostcodeQuery}
+                                onValueChange={setEditPostcodeQuery}
+                              />
+                              <CommandEmpty>No postcodes found.</CommandEmpty>
+                              <CommandGroup>
+                                {filteredEditPostcodes.map((p) => (
+                                  <CommandItem
+                                    key={p._id}
+                                    value={p._id}
+                                    onSelect={() => {
+                                      setEditPostcode(p._id);
+                                      setEditPostcodeQuery("");
+                                    }}
+                                  >
+                                    <Check
+                                      className={cn(
+                                        "mr-2 h-4 w-4",
+                                        editPostcode === p._id ? "opacity-100" : "opacity-0"
+                                      )}
+                                    />
+                                    {p.postcode}
+                                  </CommandItem>
+                                ))}
+                              </CommandGroup>
+                            </Command>
+                          </PopoverContent>
+                        </Popover>
                       ) : (
                         r.postId?.postcode
                       )}
                     </td>
+
+                    {/* Category */}
                     <td className="border p-2">
                       {editId === r._id ? (
                         <select
@@ -332,6 +399,8 @@ const fetchRates = async () => {
                         r.categoryId?.category
                       )}
                     </td>
+
+                    {/* Size */}
                     <td className="border p-2">
                       {editId === r._id ? (
                         <select
@@ -349,6 +418,8 @@ const fetchRates = async () => {
                         r.sizeId?.size
                       )}
                     </td>
+
+                    {/* Rate */}
                     <td className="border p-2">
                       {editId === r._id ? (
                         <input
@@ -361,19 +432,15 @@ const fetchRates = async () => {
                         r.rate
                       )}
                     </td>
+
+                    {/* Actions */}
                     <td className="border p-2 flex justify-center gap-2">
                       {editId === r._id ? (
                         <>
-                          <Button
-                            onClick={() => handleUpdate(r._id)}
-                            disabled={loading}
-                          >
+                          <Button className=" text-white-1" onClick={() => handleUpdate(r._id)} disabled={loading}>
                             Save
                           </Button>
-                          <Button
-                            variant="secondary"
-                            onClick={() => setEditId(null)}
-                          >
+                          <Button className=" bg-black-4 text-white-1" onClick={() => setEditId(null)}>
                             Cancel
                           </Button>
                         </>
@@ -391,10 +458,7 @@ const fetchRates = async () => {
                           >
                             <Pencil size={18} />
                           </Button>
-                          <Button
-                            variant="destructive"
-                            onClick={() => handleDelete(r._id)}
-                          >
+                          <Button variant="destructive" onClick={() => handleDelete(r._id)}>
                             <Trash size={18} />
                           </Button>
                         </>
@@ -424,6 +488,7 @@ const fetchRates = async () => {
         </Button>
         {[...Array(totalPages)].map((_, idx) => (
           <Button
+          className=" text-white-1"
             key={idx}
             variant={currentPage === idx + 1 ? "default" : "outline"}
             onClick={() => goToPage(idx + 1)}
